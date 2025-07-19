@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor's Note Scanner</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to right, #f8f8f8, #e8f5e9);
+            margin: 0;
+            padding: 0;
+        }
+
+        .hero {
+            background-color: #4CAF50;
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+
+        .hero h1 {
+            font-size: 42px;
+            margin-bottom: 10px;
+        }
+
+        .hero p {
+            font-size: 18px;
+        }
+
+        .form-container {
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        form {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        input[type="file"] {
+            margin-bottom: 20px;
+            padding: 10px;
+            width: 90%;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #43a047;
+        }
+
+        .output-section {
+            padding: 20px 40px;
+            text-align: center;
+        }
+
+        .medicine-list, pre {
+            background-color: #f0f0f0;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: left;
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        .medicine-list li {
+            margin-bottom: 10px;
+        }
+
+        .medicine-detail {
+            margin-top: 10px;
+            background-color: #ffffff;
+            border-left: 5px solid #4CAF50;
+            padding: 10px;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            text-align: left;
+            max-width: 700px;
+            margin: 10px auto;
+        }
+
+        .verification-section {
+            background-color: #E8F5E9;
+            padding: 30px;
+            margin: 40px auto;
+            border-radius: 12px;
+            max-width: 800px;
+            text-align: center;
+            box-shadow: 0 6px 10px rgba(0,0,0,0.1);
+        }
+
+        .verification-section h2 {
+            color: #2E7D32;
+            margin-top: 0;
+        }
+
+        .verification-section p {
+            margin-bottom: 25px;
+        }
+
+        .verification-button {
+            display: inline-block;
+            background-color: #2E7D32;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+
+        .verification-button:hover {
+            background-color: #1B5E20;
+        }
+
+        .prescription-image {
+            max-width: 100%;
+            height: auto;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 600px) {
+            .hero h1 {
+                font-size: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hero">
+        <h1><i class="fas fa-notes-medical"></i> Doctor's Note Scanner</h1>
+        <p>Scan handwritten prescriptions and extract medicine names using AI.</p>
+    </div>
+    <div class="form-container">
+        <form action="/scan" method="post" enctype="multipart/form-data">
+            <input type="file" name="prescription" accept=".png, .jpg, .jpeg, .gif" required>
+            <br>
+            <button type="submit"><i class="fas fa-file-medical"></i> Scan Prescription</button>
+        </form>
+    </div>
+
+    {% if text %}
+    <div class="output-section">
+        <h2>📝 Extracted Text</h2>
+        <pre>{{ text }}</pre>
+        
+        {% if prescription_path %}
+        <h3>Scanned Prescription</h3>
+        <img src="{{ url_for('static', filename='uploads/' + prescription_path) }}" alt="Prescription" class="prescription-image">
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if dosages %}
+    <div class="output-section">
+        <h2>💊 Dosage Instructions Found</h2>
+        <ul class="medicine-list">
+            {% for dose in dosages %}
+                <li>{{ dose }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if medicine_details %}
+    <div class="output-section">
+        <h2>📋 Medicine Details</h2>
+        {% for item in medicine_details %}
+            <div class="medicine-detail">
+                <h3>{{ item.name }}</h3>
+                <p><strong>Price:</strong> {% if item.price != "Not found" %}₹{% endif %}{{ item.price }}</p>
+                <p><strong>Manufacturer:</strong> {{ item.manufacturer }}</p>
+                <p><strong>Pack:</strong> {{ item.pack }}</p>
+                <p><strong>Composition:</strong> {{ item.composition }}</p>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <div class="verification-section">
+        <h2><i class="fas fa-shield-check"></i> Medicine Verification</h2>
+        <p>Verify if the medicine you bought matches your prescription. Take a photo of your store-bought medicine and upload it for verification.</p>
+        <a href="/verify" class="verification-button"><i class="fas fa-check-circle"></i> Verify My Medicine</a>
+    </div>
+    {% endif %}
+
+</body>
+</html>
